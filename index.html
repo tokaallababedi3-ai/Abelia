@@ -222,7 +222,7 @@ const size=sizeSelect.value;
 const color=colorSelect.value;
 if(!size || !color){ e.preventDefault(); alert("الرجاء اختيار المقاس واللون قبل إرسال الطلب."); return; }
 const message=`مرحباً، أود طلب القطعة التالية:\n${p.name}\nالمقاس: ${size}\nاللون: ${color}\nالسعر: ${p.price.toLocaleString()} ل.س\n${window.location.origin+'/'+p.images[0]}`;
-waLink.href=`https://wa.me/96395906414?text=${encodeURIComponent(message)}`;
+waLink.href=`https://wa.me/963959906414?text=${encodeURIComponent(message)}`;
 };
 
 history.pushState({modalOpen:true},"");
