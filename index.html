@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>abelia</title>
+<style>
+body { font-family:"Cairo",sans-serif; background:#fff; color:#222; text-align:center; margin:0; padding:0;}
+header { position:relative; }
+header img { width:100%; height:150px; object-fit:cover; display:block; }
+#mainFavIcon { position:absolute; top:10px; left:10px; font-size:28px; color:#f59aa6; cursor:pointer; background:rgba(255,255,255,0.8); border-radius:50%; padding:6px 10px; }
+.top-bar { margin:10px; display:flex; justify-content:center; flex-wrap:wrap; align-items:center; gap:10px; }
+.filters { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+.filter-btn { display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #f59aa6; color:#f59aa6; border-radius:20px; padding:6px 10px; cursor:pointer; font-size:14px; transition:0.3s; }
+.filter-btn.active { background:#f59aa6; color:#fff; }
+.filter-btn:hover { background:#f59aa6; color:white; }
+.filter-btn img { width:50px; height:35px; border-radius:10%; object-fit:cover; }
+.sort-section { display:flex; align-items:center; gap:5px; }
+.sort-section select { padding:6px 10px; border-radius:10px; border:1px solid #ccc; font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; padding:15px; }
+.product { border:1px solid #eee; border-radius:15px; overflow:hidden; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.1); cursor:pointer; transition:0.3s; position:relative; }
+.product:hover { transform:scale(1.03); }
+.product img { width:100%; height:180px; object-fit:cover; }
+.product h3 { margin:10px 0 5px; color:#444; font-size:14px; }
+.product p { margin:0 0 10px; color:#f59aa6; font-weight:bold; font-size:13px; }
+.fav-icon { position:absolute; top:10px; left:10px; font-size:22px; cursor:pointer; z-index:2; transition:transform 0.2s,color 0.2s; }
+.fav-icon.favorited { color:#f59aa6; transform:scale(1.2); animation:pulse 0.3s; }
+@keyframes pulse {0%{transform:scale(1);}50%{transform:scale(1.4);}100%{transform:scale(1.2);}}
+.direct-sale { position:absolute; bottom:10px; left:10px; background:#87d1be; color:white; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:100; }
+.modal-content { background:#fff; border-radius:15px; padding:20px; width:90%; max-width:420px; text-align:center; position:relative; }
+.modal img { width:80%; max-height:400px; object-fit:contain; border-radius:10px; }
+.close { position:absolute; top:8px; right:12px; font-size:20px; cursor:pointer; color:#555; }
+.arrow { cursor:pointer; font-size:20px; margin:0 10px; color:#f59aa6; }
+select { margin:8px 0; padding:8px; width:70%; border-radius:8px; border:1px solid #ccc; }
+a.whatsapp { display:inline-block; background:#f59aa6; color:white; text-decoration:none; padding:10px 20px; border-radius:25px; margin-top:10px; transition:0.3s; }
+a.whatsapp:hover { background:#b62c70; }
+#favPage { display:none; padding-bottom:40px; }
+#backHome { margin:15px; padding:8px 16px; border:none; background:#f59aa6; color:white; border-radius:20px; cursor:pointer; }
+#modalFav { position:absolute; top:10px; left:10px; font-size:28px; cursor:pointer; color:white; border:2px solid #f59aa6; background:white; border-radius:0; }
+#modalFav.favorited { background:#f59aa6; color:white; border:2px solid #f59aa6; }
+</style>
+</head>
+<body>
+<header>
+<img src="images/logo.jpg" alt="شعار المتجر">
+<div id="mainFavIcon">❤️</div>
+</header>
+
+<div id="mainPage">
+<div class="top-bar">
+<div class="filters">
+<div class="filter-btn active" data-cat="الكل" onclick="filterCategory('الكل', this)"><img src="images/all.jpg"><span>الكل</span></div>
+<div class="filter-btn" data-cat="فساتين" onclick="filterCategory('فساتين', this)"><img src="images/dress.jpg"><span>فساتين</span></div>
+<div class="filter-btn" data-cat="بلوزات" onclick="filterCategory('بلوزات', this)"><img src="images/blouse.jpg"><span>بلوزات</span></div>
+<div class="filter-btn" data-cat="أوفر سايز" onclick="filterCategory('أوفر سايز', this)"><img src="images/oversize.jpg"><span>أوفر سايز</span></div>
+</div>
+<div class="sort-section">
+<label>ترتيب:</label>
+<select id="sortSelect" onchange="sortProducts()">
+<option value="none">بدون</option>
+<option value="asc">الأرخص</option>
+<option value="desc">الأغلى</option>
+</select>
+</div>
+</div>
+<div class="grid" id="products"></div>
+</div>
+
+<div id="favPage">
+<h2 style="color:#f59aa6;">المفضلة ❤️</h2>
+<div class="grid" id="favProducts"></div>
+<button id="backHome" onclick="showHome()">العودة للصفحة الرئيسية</button>
+</div>
+
+<div class="modal" id="productModal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">&times;</span>
+<div id="modalImages">
+<span class="arrow" onclick="prevImage()">&#10094;</span>
+<img id="modalImage" src="">
+<span class="arrow" onclick="nextImage()">&#10095;</span>
+</div>
+<h3 id="modalName"></h3>
+<p id="modalPrice"></p>
+<p id="modalDesc"></p>
+<select id="sizeSelect"><option value="">اختر المقاس</option></select>
+<select id="colorSelect"><option value="">اختر اللون</option></select>
+<div id="modalDirectSale" class="direct-sale" style="display:none;">بيع مباشر</div>
+<div style="margin-top:10px;">
+<span class="fav-icon" id="modalFav">❤️</span>
+<a class="whatsapp" id="waLink" target="_blank">طلب عبر واتساب</a>
+</div>
+</div>
+</div>
+
+<script>
+let products=[
+{name:"فستان صيفي طويل", price:95000, images:["images/1.jpg","images/1_2.jpg"], sizes:["S","M","L"], colors:["أبيض","زهري"], category:["فساتين","أوفر سايز"], description:"فستان خفيف أنيق مناسب للأجواء الصيفية.", sale:"بيع مباشر"},
+{name:"فستان بربطة خصر", price:75000, images:["images/11-1.jpg","images/11-2.jpg","images/11-3.jpg","images/11-4.jpg"], sizes:["2xl","M","L"], colors:["ماروني"], category:["فساتين"], description:"فستان بطول متوسط أكمام طويلة وربطة على الخصر باللون الماروني.", sale:"تواصي"},
+{name:"فستان ساتان بطول متوسط", price:155000, images:["images/10-1.jpg","images/10-2.jpg","images/10-3.jpg","images/10-4.jpg"], sizes:["S","M","L","XL"], colors:["أحمر"], category:["فساتين"], description:"فستان ساتان أحمر مع أكمال طولي وتفاصيل على الخصر.", sale:"تواصي"},
+{name:"فستان باكمام منفوخة", price:100000, images:["images/3-1.jpg","images/3-2.jpg","images/3-3.jpg","images/3-4.jpg","images/3-5.jpg"], sizes:["M","2XL"], colors:["light blue"], category:["فساتين"], description:"فستان باكمام منفوخة بقماش ناعم.", sale:"تواصي"},
+{name:"فستان قصير", price:75000, images:["images/5-1.jpg","images/5-2.jpg","images/5-3.jpg"], sizes:["2xl","xl","L"], colors:["موف","جامق"], category:["فساتين"], description:"فستان قصير بتفاصيل دقيقة.", sale:"تواصي"},
+{name:"فستان الطول", price:150000, images:["images/4-1.jpg","images/4-2.jpg","images/4-3.jpg","images/4-4.jpg","images/4-5.jpg"], sizes:["S","M","L","XL"], colors:["أخضر"], category:["فساتين"], description:"فستان الطول متوسط.", sale:"تواصي"},
+{name:"كنزة صوف", price:150000, images:["images/6-1.jpg","images/6-2.jpg","images/6-3.jpg","images/6-4.jpg"], sizes:["S"], colors:["سكري"], category:["بلوزات"], description:"كنزة صوف.", sale:"تواصي"},
+{name:"فستان الطول", price:150000, images:["images/7-1.jpg","images/7-2.jpg","images/7-3.jpg","images/7-4.jpg","images/7-5.jpg"], sizes:["XL","2XL","3XL","4XL","5XL","6XL"], colors:["رمادي"], category:["أوفر سايز","فساتين"], description:"فستان طويل معربط خصر.", sale:"تواصي"},
+{name:"فستان الطول", price:100000, images:["images/9-2.jpg","images/9-3.jpg"], sizes:["S","M","L"], colors:["أزرق فاتح"], category:["فساتين"], description:"فستان طويل أزرق فاتح.", sale:"تواصي"},
+{name:"بلوزة قطنية أنيقة", price:55000, images:["images/2.jpg","images/2_2.jpg"], sizes:["M","L","XL"], colors:["زهري","أسود"], category:["بلوزات","أوفر سايز"], description:"بلوزة قطنية ناعمة.", sale:"تواصي"}
+];
+
+let currentCategory="الكل", currentIndex=0, currentImageIndex=0;
+let favorites=JSON.parse(localStorage.getItem("favorites")||"[]");
+
+const productsContainer=document.getElementById("products");
+const favProductsContainer=document.getElementById("favProducts");
+const modal=document.getElementById("productModal");
+const modalImage=document.getElementById("modalImage");
+const modalName=document.getElementById("modalName");
+const modalPrice=document.getElementById("modalPrice");
+const modalDesc=document.getElementById("modalDesc");
+const sizeSelect=document.getElementById("sizeSelect");
+const colorSelect=document.getElementById("colorSelect");
+const waLink=document.getElementById("waLink");
+const sortSelect=document.getElementById("sortSelect");
+const mainPage=document.getElementById("mainPage");
+const favPage=document.getElementById("favPage");
+const modalFav=document.getElementById("modalFav");
+const modalDirectSale=document.getElementById("modalDirectSale");
+const filterButtons=document.querySelectorAll('.filter-btn');
+
+// عرض المنتجات
+function showProducts(){
+    productsContainer.innerHTML="";
+    let list=products.filter(p=>currentCategory=="الكل"||p.category.includes(currentCategory));
+    if(sortSelect.value=="asc") list.sort((a,b)=>a.price-b.price);
+    else if(sortSelect.value=="desc") list.sort((a,b)=>b.price-a.price);
+
+    list.forEach((p,i)=>{
+        const div=document.createElement("div");
+        div.className="product";
+        div.innerHTML=`<div class="fav-icon ${favorites.includes(p.name)?'favorited':''}">&#9825;</div>
+                       <img src="${p.images[0]}">
+                       <h3>${p.name}</h3>
+                       <p>${p.price.toLocaleString()} ل.س</p>
+                       ${p.sale==="بيع مباشر"?'<div class="direct-sale">بيع مباشر</div>':''}`;
+        const favIcon=div.querySelector(".fav-icon");
+        favIcon.onclick=(e)=>{
+            e.stopPropagation();
+            toggleFavorite(e,p.name);
+        };
+        div.onclick=()=>openModal(products.indexOf(p));
+        productsContainer.appendChild(div);
+    });
+}
+
+// تغيير حالة المفضلة
+function toggleFavorite(event,name){
+    const icon=event.currentTarget;
+    if(favorites.includes(name)){
+        favorites=favorites.filter(f=>f!==name);
+        icon.classList.remove("favorited");
+        icon.innerHTML="&#9825;";
+    }else{
+        favorites.push(name);
+        icon.classList.add("favorited");
+        icon.innerHTML="❤️";
+    }
+    localStorage.setItem("favorites",JSON.stringify(favorites));
+}
+
+// تصفية المنتجات
+function filterCategory(cat,btn){
+    currentCategory=cat;
+    filterButtons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    showProducts();
+}
+
+// ترتيب المنتجات
+function sortProducts(){ showProducts(); }
+
+// إظهار صفحة المفضلة
+function showFavoritesPage(){
+    mainPage.style.display="none";
+    favPage.style.display="block";
+    favProductsContainer.innerHTML="";
+
+    history.pushState({favPage:true}, ""); // تسجيل حالة المفضلة
+
+    let favItems = products.filter(p => favorites.includes(p.name));
+    if(favItems.length==0){
+        favProductsContainer.innerHTML="<p>لا توجد منتجات في المفضلة بعد ❤️</p>";
+        return;
+    }
+    favItems.forEach((p,i)=>{
+        const div=document.createElement("div");
+        div.className="product";
+        div.innerHTML=`<div class="fav-icon favorited">&#10084;</div>
+                       <img src="${p.images[0]}">
+                       <h3>${p.name}</h3>
+                       <p>${p.price.toLocaleString()} ل.س</p>
+                       ${p.sale==="بيع مباشر"?'<div class="direct-sale">بيع مباشر</div>':''}`;
+        const favIcon = div.querySelector(".fav-icon");
+        favIcon.onclick = (e) => {
+            e.stopPropagation();
+            favorites = favorites.filter(f => f !== p.name);
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+            showFavoritesPage();
+        };
+        div.onclick=()=>openModal(products.indexOf(p));
+        favProductsContainer.appendChild(div);
+    });
+}
+
+// العودة للصفحة الرئيسية
+function showHome(){
+    favPage.style.display="none";
+    mainPage.style.display="block";
+    showProducts();
+}
+
+// فتح المودال
+function openModal(index){
+    currentIndex=index; currentImageIndex=0;
+    const p=products[index];
+    modalName.textContent=p.name;
+    modalPrice.textContent=p.price.toLocaleString()+" ل.س";
+    modalDesc.textContent=p.description;
+    modalImage.src=p.images[0];
+    sizeSelect.innerHTML='<option value="">اختر المقاس</option>';
+    colorSelect.innerHTML='<option value="">اختر اللون</option>';
+    p.sizes.forEach(s=>sizeSelect.innerHTML+=`<option value="${s}">${s}</option>`);
+    p.colors.forEach(c=>colorSelect.innerHTML+=`<option value="${c}">${c}</option>`);
+    modalDirectSale.style.display=p.sale==="بيع مباشر"?"block":"none";
+
+    modalFav.className="fav-icon "+(favorites.includes(p.name)?"favorited":"");
+    modalFav.onclick=()=>{
+        if(favorites.includes(p.name)) favorites=favorites.filter(f=>f!==p.name);
+        else favorites.push(p.name);
+        localStorage.setItem("favorites",JSON.stringify(favorites));
+        modalFav.className="fav-icon "+(favorites.includes(p.name)?"favorited":"");
+        showProducts();
+    };
+
+    waLink.onclick=(e)=>{
+        const size=sizeSelect.value;
+        const color=colorSelect.value;
+        if(!size || !color){ e.preventDefault(); alert("الرجاء اختيار المقاس واللون قبل إرسال الطلب."); return; }
+        let imagesText = p.images.map(img=>window.location.origin+'/'+img).join("\n");
+        const message=`مرحباً، أود طلب القطعة التالية:\n${p.name}\nالمقاس: ${size}\nاللون: ${color}\nالسعر: ${p.price.toLocaleString()} ل.س\nالصور:\n${imagesText}`;
+        waLink.href=`https://wa.me/963959906414?text=${encodeURIComponent(message)}`;
+    };
+
+    modal.style.display="flex";
+    document.querySelectorAll(".product .fav-icon").forEach(el=>el.style.display="none");
+    history.pushState({modalOpen:true},"");
+}
+
+// إغلاق المودال
+function closeModal(){
+    modal.style.display="none";
+    document.querySelectorAll(".product .fav-icon").forEach(el=>el.style.display="block");
+}
+
+// التنقل بين الصور
+function nextImage(){ const p=products[currentIndex]; currentImageIndex=(currentImageIndex+1)%p.images.length; modalImage.src=p.images[currentImageIndex]; }
+function prevImage(){ const p=products[currentIndex]; currentImageIndex=(currentImageIndex-1+p.images.length)%p.images.length; modalImage.src=p.images[currentImageIndex]; }
+
+// أيقونة المفضلة الرئيسية
+document.getElementById("mainFavIcon").onclick=showFavoritesPage;
+
+// إغلاق المودال عند الضغط خارجه
+window.onclick = function(event){ if(event.target==modal) closeModal(); };
+
+// التعامل مع زر الرجوع
+window.onpopstate = function(e){
+    if(modal.style.display=="flex"){ closeModal(); }
+    else if(favPage.style.display=="block"){ showHome(); }
+};
+
+showProducts();
+</script>
+</body>
+</html>
